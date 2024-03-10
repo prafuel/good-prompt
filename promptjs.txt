@@ -1,0 +1,299 @@
+'use client'
+
+import React, { useEffect, useState, useRef } from 'react'
+import ListTag from '../mini/ListTag'
+
+import LogoAndLogin from './LogoAndLogin'
+import Filter from '../mini/Filter'
+
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faXmark, faRotateRight, faCopy, faGear, faBurn, faPerson, faCoffee, faPlus, faFloppyDisk, faUpload } from '@fortawesome/free-solid-svg-icons'
+
+
+import { signOut } from 'next-auth/react'
+
+import { deleteCookie } from 'cookies-next'
+
+/* 
+blue = #40A2D8
+BLACK
+CREAME = #F0EDCF
+
+DARK BLUE = #0B60B0
+*/
+
+// now work on chatgpt api
+// multiple api
+
+
+import axios from 'axios';
+
+const PromptBox = (props) => {
+
+    const random = [
+        "Write a dialogue between two characters who discover a hidden portal in their backyard.",
+        "Describe a futuristic city where humans coexist with advanced artificial intelligence beings.",
+        "Create a short story about a chef who discovers a magical ingredient with unusual properties.",
+        "Imagine a world where everyone has a unique superpower, but the protagonist's power is considered useless until a critical moment.",
+        "Write a poem inspired by the colors of a sunset, exploring the emotions they evoke.",
+        "Develop a conversation between a time traveler from the past and a person from the present, discussing the changes in society.",
+        "Describe a day in the life of a sentient robot navigating through human society, trying to fit in.",
+        "Craft a suspenseful scene set in an abandoned amusement park at midnight.",
+        "Create a monologue for a character reflecting on their journey to self-discovery.",
+        "Write a letter from a fictional character to their future self, sharing hopes, fears, and aspirations.",
+        "Explore a world where dreams come to life, and characters must navigate through dreamscapes to achieve their goals.",
+        "Tell a story from the perspective of an inanimate object, giving it a voice and personality.",
+        "Write a scene where characters discover an ancient book with the power to change reality, and they must decide how to use it.",
+        "Imagine a society where emotions are bought and sold, and explore the consequences of a character losing their ability to feel.",
+        "Craft a story set in a post-apocalyptic world where nature has reclaimed urban landscapes, and survivors must adapt to a new way of life."
+    ]
+
+    const technical = [
+        'Project', 'Coding', 'Development', 'Technical', 'Innovation', 'Technology', 'Programming', 'Cybersecurity', 'Robotics', 'VirtualReality', 'Blockchain', 'AugmentedReality'
+    ]
+
+    const creative = ["Fun", "Social", "Design", "Art", "Productivity", "Health", "Writing", "Travel", "Photography", "Music", "Fasion", "Cooking", "Enviroment",
+        "Motivation", "Quotes", "Mindfulness", "Space", "Language", "Philosophy", "Psychology", "Anime", "Movies", "Books"
+    ]
+
+    const type = [
+        "Content", "Equation", "List", "Code", "Explanation", "Key Points", "Other"
+    ]
+
+    const pov = [
+        "Default", "Developer", "Creative", "Artist", "Data Analyst", "Engineer", "Other"
+    ]
+
+    const exp_lvl = [
+        "Easy to Understand", "Deep", "Complex but Deep"
+    ]
+
+    const [prompt, setPrompt] = useState('');
+    const [output, setOutput] = useState('');
+
+    // for file input
+    const [upload, setUpload] = useState(false);
+    const [selected_file, setSelect_file] = useState(null);
+
+    // filter values
+    const [pov_value, setPov_value] = useState('');
+    const [type_value, setType_value] = useState('');
+    const [LLM, setLLM] = useState('');
+    const [model_creativity, setModel_creativity] = useState('');
+    const [exp_lvl_value, setExp_lvl_value] = useState('');
+
+    // fetching data from flask api
+    const fetchData = async (API_URL, data) => {
+        const current = Object.getOwnPropertyNames(data)[0];
+
+        if (current == "user") {
+            setOutput("Loading...")
+            try {
+                const response = await axios.post(API_URL, data);
+                return response.data['output'];
+            } catch (error) {
+                alert(error);
+                throw error;
+            }
+        }
+
+        try {
+            const response = await axios.post(API_URL, data, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            // console.log(response);
+            return response.data['output'];
+        } catch (error) {
+            alert(error);
+            throw error;
+        }
+
+
+    }
+
+    const handlePromptBtn = () => {
+        if (prompt.trim().length == 0) {
+            return;
+        }
+
+        // fetching result from flask api
+        setOutput(prompt)
+    }
+
+    const handleRefineBtn = async () => {
+        if (prompt.trim().length == 0) {
+            return;
+        }
+
+        let filter = {
+            "input": prompt,
+            "pov": pov_value,
+            "type": type_value,
+            "understanding_lvl": exp_lvl_value,
+            "llm": LLM,
+            "creativity": model_creativity
+        }
+        setOutput(await fetchData("http://localhost:8000", { "user": JSON.stringify(filter) }));
+    }
+
+    const handleRandomBtn = () => {
+        let r = Math.floor(Math.random() * (random.length - 1));
+        setPrompt(random[r]);
+    }
+
+    const handleRedBtn = () => {
+        setPrompt('');
+        setOutput('');
+    }
+
+    const handleBlueBtn = () => {
+        alert(output);
+    }
+
+    const handleGrayBtn = () => {
+        navigator.clipboard.writeText(output);
+        alert("Copied");
+    }
+
+    const handleLogout = () => {
+        deleteCookie('login')
+        signOut('google');
+    }
+
+    const handleFileUpload = async (e) => {
+        e.preventDefault();
+        if (!selected_file) { return; };
+
+        setUpload(false);
+
+        try {
+            const form_data = new FormData();
+            form_data.append("file", selected_file)
+
+            // console.log(form_data)
+            const res = await fetchData("http://localhost:8000/file", form_data);
+            alert(res);
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            alert("An error occurred while uploading the file.");
+        }
+
+        setSelect_file(null);
+    }
+
+    return (
+        <main className='flex flex-col justify-center items-center gap-y-2 py-20'>
+
+            <LogoAndLogin data={props} handleLogout={{ data: handleLogout }} />
+
+            {/* upload section : position:absolute */}
+
+            {
+                (upload) ?
+                    <div className="fixed h-40 bottom-1/4 bg-[#18272c] flex flex-col justify-around items-center border border-white">
+                        <div className="text-sm flex gap-4 px-3">
+                            for now only csv, pdf files are accepted
+                            <span onClick={() => setUpload(false)} className='w-3 h-3 bg-red-500 rounded-full flex justify-center items-center p-3'>
+                                <FontAwesomeIcon icon={faXmark} className='bg-[#fb254100]' />
+                            </span>
+                        </div>
+                        <div className='w-full flex justify-center items-center px-5'>
+                            <form onSubmit={handleFileUpload}>
+                                <input type="file" placeholder="File input" onChange={(e) => {
+                                    setSelect_file(e.target.files[0]);
+                                }} />
+                                <button className='border border-white px-2 py-1 hover:bg-purple-900' type="submit">Upload</button>
+                            </form>
+
+                        </div>
+                    </div>
+                    : null
+            }
+
+
+            {/* input promptbox */}
+            <div className='promptbox flex flex-col gap-y-2 xl:min-w-[60rem] sm:min-w-[40rem] items-center'>
+
+                <div className='h-96 w-96 flex flex-row xl:w-full md:w-full'>
+                    <textarea style={{ 'resize': 'none' }} className='h-full w-full outline-none p-5 text-md rounded-tl-2xl rounded-bl-2xl bg-[#1B1B1B]'
+                        placeholder='eg. Suggest some good machine learning major project ideas' value={prompt} rows={2}
+                        onChange={(e) => { setPrompt(e.target.value) }} />
+
+                    <div className='h-full'>
+                        <button onClick={handleRedBtn} className='bg-[#d03046] rounded-tr-2xl h-1/2 w-full p-1'>
+                            <FontAwesomeIcon icon={faXmark} className='bg-[#fb254100]' />
+                        </button>
+                        <button onClick={() => {
+                            (upload) ? setUpload(false) :
+                                setUpload(true);
+                        }} className='bg-[#2c9de8] h-1/2 rounded-br-2xl w-full p-1'>
+                            <FontAwesomeIcon icon={faUpload} className='bg-[#fb254100]' />
+                        </button>
+                    </div>
+                </div>
+
+                <div className='flex flex-row h-fit gap-x-2 w-full'>
+                    <button onClick={handlePromptBtn} className='p-2 w-full bg-purple-700 rounded-tl-2xl rounded-bl-2xl'>Prompt</button>
+                    <button onClick={handleRefineBtn} className='p-2 w-full bg-blue-700'>Refine</button>
+                    <button onClick={handleRandomBtn} className='p-2  w-full bg-[#150050] rounded-tr-2xl rounded-br-2xl'>Random</button>
+                </div>
+
+            </div>
+
+            {/* filter */}
+            <div className="filter flex flex-row-reverse xl:min-w-[60rem] sm:min-w-[40rem] items-center bg-[#1b1b1b] rounded-xl">
+                <div className="w-full h-fit p-5">
+
+                    <Filter data={{ "q": "Select what type of work you want to do??", "arr": pov, "func": setPov_value, "value": pov_value }} />
+                    <Filter data={{ "q": `Select your preferred domain`, "arr": [`Technology`, `Finance`, `Healthcare`, `Education`, `Entertainment`], "func": `setDomain`, "value": `selectedDomain` }} />
+                    <Filter data={{ "q": `Choose the project complexity`, "arr": [`Simple`, `Moderate`, `Complex`, `Advanced`], "func": `setProjectComplexity`, "value": `projectComplexity` }} />
+                    <Filter data={{ "q": "Type of output", "arr": type, "func": setType_value, "value": type_value }} />
+
+                    <Filter data={{ "q": "Understanding level", "arr": exp_lvl, "func": setExp_lvl_value, "value": exp_lvl_value }} />
+
+                    <Filter data={{ "q": "Choose LLM", "arr": ['mistral-7b', 'llama-2', 'openai', 'text2text', 'claude', 'gemini'], "func": setLLM, "value": LLM }} />
+                    <Filter data={{ "q": "Model creativity", "arr": ['Low', 'Medium', 'High', 'Critical'], "func": setModel_creativity, "value": model_creativity }} />
+
+                </div>
+                <div className="w-fit h-full flex flex-col justify-evenly bg-gray-600 p-4 rounded-l-xl">
+
+                    <span className="w-fit h-fit cursor-pointer">
+                        <FontAwesomeIcon icon={faGear} />
+                    </span>
+                    <span className="w-fit h-fit cursor-pointer">
+                        <FontAwesomeIcon icon={faPlus} />
+                    </span>
+                    <span className="w-fit h-fit cursor-pointer">
+                        <FontAwesomeIcon icon={faFloppyDisk} />
+                    </span>
+
+                </div>
+
+            </div>
+
+
+
+            {/* output promptbox */}
+            <div className='outputbox flex flex-col gap-y-2 xl:min-w-[60rem] sm:min-w-[40rem] items-center'>
+                <div className='h-96 w-96 flex flex-row px-3 xl:w-full md:w-full'>
+                    <textarea style={{ 'resize': 'none' }} className='h-full w-full outline-none p-5 text-md rounded-tl-2xl rounded-bl-2xl bg-[#1B1B1B]'
+                        placeholder='Output will be shown here...' value={output} rows={2} disabled />
+
+                    <div className='h-full'>
+                        <button onClick={handleBlueBtn} className='p-1 h-1/2 w-full bg-blue-700 rounded-tr-2xl'>
+                            <FontAwesomeIcon icon={faRotateRight} className='bg-[#fb254100]' />
+                        </button>
+                        <button onClick={handleGrayBtn} className='p-1 h-1/2 w-full bg-gray-600 rounded-br-2xl'>
+                            <FontAwesomeIcon icon={faCopy} className='bg-[#fb254100]' />
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    )
+}
+
+export default PromptBox
