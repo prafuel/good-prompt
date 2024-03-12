@@ -6,7 +6,7 @@ import ListTag from '../mini/ListTag'
 import Filter from '../mini/Filter'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faXmark, faRotateRight, faCopy, faGear, faCoffee, faPlus, faFloppyDisk, faUpload, faHandSparkles, faTimes, faSignOutAlt } from '@fortawesome/free-solid-svg-icons'
+import { faXmark, faRotateRight, faCopy, faGear, faCoffee, faPlus, faFloppyDisk, faUpload, faHandSparkles, faTimes, faSignOutAlt, faBrain, faGears, faServer, faSoccerBall } from '@fortawesome/free-solid-svg-icons'
 
 
 import { signOut } from 'next-auth/react'
@@ -75,7 +75,7 @@ const PromptBox = (props) => {
     const [chat, setChat] = useState([
         {
             "input": "Q : How to use Good Prompt effectively??",
-            "output": "From server : As you see on your right side, there are some options. Just fill in those related to your needs and get the results you've always wanted",
+            "output": ": As you see on your right side, there are some options. Just fill in those related to your needs and get the results you've always wanted",
             "key": 1
         }
     ]);
@@ -130,7 +130,8 @@ const PromptBox = (props) => {
         }
         // setOutput(prompt)
 
-        const o = await fetchData("http://localhost:8000/prompt", { "user2": prompt })
+        // const o = await fetchData("http://localhost:8000/prompt", { "user2": prompt });
+        const o = prompt;
 
         const newItem = {
             input: `Q : ${prompt}`,
@@ -168,8 +169,9 @@ const PromptBox = (props) => {
         setOutput('');
     }
 
-    const handleBlueBtn = () => {
-        alert(chat['output']);
+    const handleBlueBtn = (key) => {
+        const idx = chat.findIndex(item => item.key === key);
+        setPrompt(chat[idx]['output'].split(":")[1].trim())
     }
 
     const handleGrayBtn = (key) => {
@@ -257,7 +259,7 @@ const PromptBox = (props) => {
             }
 
             {/* Left section */}
-            <div className='logo h-full w-full md:w-1/2 flex md:flex-col items-center justify-center md:justify-center gap-y-40 bg-[#1b1b1b]'>
+            <div className='logo h-full w-full md:w-1/2 flex md:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
                 <div className='w-full'><Logo data={{ width: "full" }} /></div>
                 <div className='flex flex-col items-center md:items-center gap-3'>
                     <img src={props.data['user']['image']} className='h-fit w-fit rounded-full border-2 border-white' />
@@ -268,70 +270,76 @@ const PromptBox = (props) => {
                 </div>
             </div>
 
-            <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-6">
+            <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
                 {/* Other sections */}
-                <div className="chatting h-full w-full flex flex-col p-5" style={{ "maxHeight": "750px" }}>
+                <div className="chatting h-full w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
 
-                    {/* User avatar */}
-                    <div className="w-full flex items-center justify-end pt-20">
-                        <img className="h-10 w-10 rounded-full" src={props.data['user']['image']} alt="user" />
-                    </div>
 
-                    <div className='flex flex-col gap-3 overflow-y-scroll'>
 
-                        {
-                            Array.isArray(chat) && chat.map((item, index) => (
-                                <div className='flex flex-col gap-3 px-10' key={index}>
-                                    <div className='bg-[#dad7d7] text-black p-4 rounded-b-3xl rounded-tl-3xl'>{item.input}</div>
-                                    <div className='bg-[#1b1b1b] border p-3 rounded-b-3xl rounded-tr-3xl'>{item.output}</div>
-                                    <div className='flex gap-1'>
-                                        <button onClick={handleBlueBtn} className='flex-1 p-1 bg-blue-700 '>
+                    {/* chatting section */}
+                    <div className="flex flex-col gap-4 px-2">
+
+                        {Array.isArray(chat) && chat.map((item, index) => (
+                            <>
+
+                                <div className="flex flex-col" key={index}>
+                                    <div>
+                                        {/* User avatar */}
+                                        <div className="w-full flex items-center justify-end">
+                                            <img className="h-10 w-10" src={props.data.user.image} alt="user" />
+                                        </div>
+                                        <div className="bg-[#dad7d7] text-black rounded-tl-3xl p-3">{item.input}</div>
+                                    </div>
+
+                                    <div>
+                                        <div className="bg-[#1b1b1b] text-white p-4 rounded-bl-3xl">{item.output}</div>
+                                    </div>
+
+                                    <div className="flex justify-end">
+                                        <button onClick={() => { handleBlueBtn(item.key) }} className="bg-blue-700 p-3">
                                             <FontAwesomeIcon icon={faRotateRight} />
                                         </button>
-                                        <button onClick={() => { handleGrayBtn(item.key) }} className='flex-1 p-1 bg-[#1b1b1b] '>
+                                        <button onClick={() => handleGrayBtn(item.key)} className="bg-[#1b1b1b] p-3">
                                             <FontAwesomeIcon icon={faCopy} />
                                         </button>
-                                        <button onClick={() => { handleClearBtn(item.key) }} className='flex-1 p-1 bg-purple-600 '>
+                                        <button onClick={() => handleClearBtn(item.key)} className="bg-purple-600 p-3">
                                             <FontAwesomeIcon icon={faHandSparkles} />
                                         </button>
                                     </div>
                                 </div>
-                            ))
-                        }
+                            </>
+                        ))}
                     </div>
                 </div>
 
                 {/* Input promptbox */}
-                <div className='promptbox flex flex-col w-full max-w-[53rem] px-6'>
+                <div className="promptbox flex flex-col w-full max-w-[53rem] px-6 mt-4">
 
-                    <div className='flex flex-row gap-1'>
-                        <button onClick={handleRedBtn} className='bg-[#d03046] py-2 w-full'>
-                            <FontAwesomeIcon icon={faXmark} className='bg-[#fb254100]' />
+                    <div className="w-full flex flex-row gap-1">
+                        <button onClick={handleRedBtn} className="bg-[#d03046] py-2 flex-grow">
+                            <FontAwesomeIcon icon={faXmark} />
                         </button>
-                        <button onClick={() => {
-                            (upload) ? setUpload(false) :
-                                setUpload(true);
-                        }} className='bg-[#2c9de8] py-2 w-full'>
-                            <FontAwesomeIcon icon={faUpload} className='bg-[#fb254100]' />
+                        <button onClick={() => setUpload(!upload)} className="bg-[#2c9de8] py-2 flex-grow">
+                            <FontAwesomeIcon icon={faUpload} />
                         </button>
                     </div>
 
                     <DynamicTextArea value={prompt} onChange={setPrompt} />
 
-                    <div className='flex flex-row gap-1'>
-                        <button onClick={handlePromptBtn} className='flex-1 p-2 bg-purple-700'>Prompt</button>
-                        <button onClick={handleRefineBtn} className='flex-1 p-2 bg-blue-700'>Refine</button>
-                        <button onClick={handleRandomBtn} className='flex-1 p-2 bg-[#150050]'>Random</button>
+                    <div className="w-full flex flex-row gap-1">
+                        <button onClick={handlePromptBtn} className="flex-grow p-2 bg-purple-700">Prompt</button>
+                        <button onClick={handleRefineBtn} className="flex-grow p-2 bg-blue-700">Refine</button>
+                        <button onClick={handleRandomBtn} className="flex-grow p-2 bg-[#150050] text-white">Random</button>
                     </div>
-
                 </div>
             </div>
 
-            <div className="w-fit h-full md:w-1/2 bg-[#1b1b1b] flex flex-row justify-between">
-                <div className="filter h-full md:h-auto md:min-w-[40rem] sm:min-w-[40rem] flex flex-row-reverse md:px-6">
+
+            <div className="h-full w-full md:w-fit bg-[#1b1b1b] flex flex-row justify-between">
+                <div className="filter h-full md:min-w-[30rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2">
                     {/* Filter section */}
-                    <div className="w-full p-5">
-                        <Filter data={{ "q": "Select what type of work you want to do??", "arr": pov, "func": setPov_value, "value": pov_value }} />
+                    <div className="h-full w-full flex flex-col gap-4 p-3">
+                        <Filter data={{ "q": "Select type of work??", "arr": pov, "func": setPov_value, "value": pov_value }} />
                         <Filter data={{ "q": `Select your preferred domain`, "arr": [`Technology`, `Finance`, `Healthcare`, `Education`, `Entertainment`], "func": setDomain, "value": domain }} />
                         <Filter data={{ "q": `Choose the project complexity`, "arr": [`Simple`, `Moderate`, `Complex`, `Advanced`], "func": setProjectComplexity, "value": projectComplexity }} />
                         <Filter data={{ "q": "Type of output", "arr": type, "func": setType_value, "value": type_value }} />
