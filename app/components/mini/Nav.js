@@ -26,11 +26,11 @@ const Nav = () => {
   }
 
   return (
-    <nav className='py-2 w-1/2 flex justify-center items-center absolute bg-[#000000] rounded-br-xl'>
-      <ul className='flex-1 text-center'>
+    <nav className='py-3 flex justify-center items-center bg-gray-800'>
+      <ul className='flex w-full justify-evenly'>
       {
           items.map((key, index) => {
-            return <Link className='px-20 py-3 inline-block' key={Date.now} href={itemsObj[key]}> <FontAwesomeIcon icon={logoList[index]} /> </Link>
+            return <Link className='p-3' key={Date.now} href={itemsObj[key]}> <FontAwesomeIcon icon={logoList[index]} /> </Link>
           })
         }
       </ul>

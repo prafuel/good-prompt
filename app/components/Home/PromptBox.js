@@ -4,6 +4,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import ListTag from '../mini/ListTag'
 
 import Filter from '../mini/Filter'
+import Nav from '../mini/Nav'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faRotateRight, faCopy, faGear, faCoffee, faPlus, faFloppyDisk, faUpload, faHandSparkles, faTimes, faSignOutAlt, faBrain, faGears, faServer, faSoccerBall } from '@fortawesome/free-solid-svg-icons'
@@ -259,16 +260,20 @@ const PromptBox = (props) => {
             }
 
             {/* Left section */}
-            <div className='logo h-full w-full md:w-1/2 flex md:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
-                <div className='w-full'><Logo data={{ width: "full" }} /></div>
-                <div className='flex flex-col items-center md:items-center gap-3'>
-                    <img src={props.data['user']['image']} className='h-fit w-fit rounded-full border-2 border-white' />
-                    <div className='flex items-center'>
-                        <span className='bg-[#1b1b1bd8] p-3 rounded-lg'>Welcome, {props.data['user']['name']}</span>
-                        <FontAwesomeIcon onClick={handleLogout} className='p-3 h-5 cursor-pointer' icon={faSignOutAlt} />
+            <div className='h-full w-full md:w-1/2 flex flex-col'>
+                <Nav />
+                <div className='logo h-full w-full flex md:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
+                    <div className='w-full'><Logo data={{ width: "full" }} /></div>
+                    <div className='flex flex-col items-center md:items-center gap-3'>
+                        <img src={props.data['user']['image']} className='h-fit w-fit rounded-full border-2 border-white' />
+                        <div className='flex items-center'>
+                            <span className='bg-[#1b1b1bd8] p-3 rounded-lg'>Welcome, {props.data['user']['name']}</span>
+                            <FontAwesomeIcon onClick={handleLogout} className='p-3 h-5 cursor-pointer' icon={faSignOutAlt} />
+                        </div>
                     </div>
                 </div>
             </div>
+
 
             <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
                 {/* Other sections */}
@@ -288,12 +293,11 @@ const PromptBox = (props) => {
                                         <div className="w-full flex items-center justify-end">
                                             <img className="h-10 w-10" src={props.data.user.image} alt="user" />
                                         </div>
+
                                         <div className="bg-[#dad7d7] text-black rounded-tl-3xl p-3">{item.input}</div>
                                     </div>
-
-                                    <div>
-                                        <div className="bg-[#1b1b1b] text-white p-4 rounded-bl-3xl">{item.output}</div>
-                                    </div>
+                                    
+                                    <div className="bg-[#1b1b1b] text-white p-4 rounded-bl-3xl">{item.output}</div>
 
                                     <div className="flex justify-end">
                                         <button onClick={() => { handleBlueBtn(item.key) }} className="bg-blue-700 p-3">
