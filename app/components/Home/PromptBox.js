@@ -76,7 +76,7 @@ const PromptBox = (props) => {
     const [chat, setChat] = useState([
         {
             "input": "Q : How to use Good Prompt effectively??",
-            "output": ": As you see on your right side, there are some options. Just fill in those related to your needs and get the results you've always wanted",
+            "output": "As you see on your right side, there are some options. Just fill in those related to your needs and get the results you've always wanted",
             "key": 1
         }
     ]);
@@ -131,12 +131,13 @@ const PromptBox = (props) => {
         }
         // setOutput(prompt)
 
-        // const o = await fetchData("http://localhost:8000/prompt", { "user2": prompt });
-        const o = prompt;
+
+        const o = await fetchData("http://localhost:8000/prompt", { "user2": prompt });
+        // const o = prompt;
 
         const newItem = {
             input: `Q : ${prompt}`,
-            output: `From server : ${o}`,
+            output: `${o}`,
             key: (Math.random() * 10) + 2
         };
 
@@ -177,7 +178,7 @@ const PromptBox = (props) => {
 
     const handleGrayBtn = (key) => {
         const idx = chat.findIndex(item => item.key === key);
-        navigator.clipboard.writeText(chat[idx].output);
+        navigator.clipboard.writeText(chat[idx].output.split(":")[1].trim());
         alert("Copied");
     }
 
@@ -279,8 +280,6 @@ const PromptBox = (props) => {
                 {/* Other sections */}
                 <div className="chatting h-full w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
 
-
-
                     {/* chatting section */}
                     <div className="flex flex-col gap-4 px-2">
 
@@ -296,18 +295,22 @@ const PromptBox = (props) => {
 
                                         <div className="bg-[#dad7d7] text-black rounded-tl-3xl p-3">{item.input}</div>
                                     </div>
-                                    
-                                    <div className="bg-[#1b1b1b] text-white p-4 rounded-bl-3xl">{item.output}</div>
 
-                                    <div className="flex justify-end">
-                                        <button onClick={() => { handleBlueBtn(item.key) }} className="bg-blue-700 p-3">
+                                    <div className="bg-[#1b1b1b] text-white p-4">
+                                        <code>
+                                            {item.output}
+                                        </code>
+                                    </div>
+
+                                    <div className="flex justify-evenly w-2/3">
+                                        <button onClick={() => { handleBlueBtn(item.key) }} className="bg-blue-700 p-3 w-full">
                                             <FontAwesomeIcon icon={faRotateRight} />
                                         </button>
-                                        <button onClick={() => handleGrayBtn(item.key)} className="bg-[#1b1b1b] p-3">
+                                        <button onClick={() => handleGrayBtn(item.key)} className="bg-[#150050] p-3 w-full">
                                             <FontAwesomeIcon icon={faCopy} />
                                         </button>
-                                        <button onClick={() => handleClearBtn(item.key)} className="bg-purple-600 p-3">
-                                            <FontAwesomeIcon icon={faHandSparkles} />
+                                        <button onClick={() => handleClearBtn(item.key)} className="bg-[#d03046] p-3 w-full">
+                                            <FontAwesomeIcon icon={faXmark} />
                                         </button>
                                     </div>
                                 </div>
@@ -320,9 +323,9 @@ const PromptBox = (props) => {
                 <div className="promptbox flex flex-col w-full max-w-[53rem] px-6 mt-4">
 
                     <div className="w-full flex flex-row gap-1">
-                        <button onClick={handleRedBtn} className="bg-[#d03046] py-2 flex-grow">
+                        {/* <button onClick={handleRedBtn} className="bg-[#d03046] py-2 flex-grow">
                             <FontAwesomeIcon icon={faXmark} />
-                        </button>
+                        </button> */}
                         <button onClick={() => setUpload(!upload)} className="bg-[#2c9de8] py-2 flex-grow">
                             <FontAwesomeIcon icon={faUpload} />
                         </button>
@@ -340,8 +343,9 @@ const PromptBox = (props) => {
 
 
             <div className="h-full w-full md:w-fit bg-[#1b1b1b] flex flex-row justify-between">
-                <div className="filter h-full md:min-w-[30rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2">
+                <div className="filter h-full md:min-w-[40rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2">
                     {/* Filter section */}
+
                     <div className="h-full w-full flex flex-col gap-4 p-3">
                         <Filter data={{ "q": "Select type of work??", "arr": pov, "func": setPov_value, "value": pov_value }} />
                         <Filter data={{ "q": `Select your preferred domain`, "arr": [`Technology`, `Finance`, `Healthcare`, `Education`, `Entertainment`], "func": setDomain, "value": domain }} />

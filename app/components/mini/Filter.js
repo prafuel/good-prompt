@@ -10,7 +10,7 @@ const Filter = (props) => {
     return (
         <div className='flex flex-col md:flex-row items-center justify-between h-fit'>
             <span className='w-full md:w-auto'>{q}</span>
-            <select className='p-2 w-40 outline-none bg-black border' value={value} onChange={(e) => { func(e.target.value) }}>
+            <select className='p-2 w-1/2 outline-none bg-black border' value={value} onChange={(e) => { func(e.target.value) }}>
                 {
                     arr.map((item, index) => {
                         return <option className="outline-none bg-black" key={`${item}k${index}`}>{item}</option>
