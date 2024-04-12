@@ -6,6 +6,8 @@ import ListTag from '../mini/ListTag'
 import Filter from '../mini/Filter'
 import Nav from '../mini/Nav'
 
+import Link from 'next/link'
+
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faXmark, faRotateRight, faCopy, faGear, faCoffee, faPlus, faFloppyDisk, faUpload, faHandSparkles, faTimes, faSignOutAlt, faBrain, faGears, faServer, faSoccerBall } from '@fortawesome/free-solid-svg-icons'
 
@@ -29,6 +31,8 @@ DARK BLUE = #0B60B0
 import axios from 'axios';
 import DynamicTextArea from '../DynamicTextArea'
 import Logo from '../mini/Logo'
+import Spinner from '../mini/Spinner'
+import InputFilter from '../mini/InputFilter'
 
 const PromptBox = (props) => {
 
@@ -50,28 +54,26 @@ const PromptBox = (props) => {
         "Craft a story set in a post-apocalyptic world where nature has reclaimed urban landscapes, and survivors must adapt to a new way of life."
     ]
 
-    const technical = [
-        'Project', 'Coding', 'Development', 'Technical', 'Innovation', 'Technology', 'Programming', 'Cybersecurity', 'Robotics', 'VirtualReality', 'Blockchain', 'AugmentedReality'
-    ]
-
-    const creative = ["Fun", "Social", "Design", "Art", "Productivity", "Health", "Writing", "Travel", "Photography", "Music", "Fasion", "Cooking", "Enviroment",
-        "Motivation", "Quotes", "Mindfulness", "Space", "Language", "Philosophy", "Psychology", "Anime", "Movies", "Books"
-    ]
 
     const type = [
-        "Content", "Equation", "List", "Code", "Explanation", "Key Points", "Other"
+        "--- Select ---", "Content", "List", "Code", "Explanation", "Key Point", "Roadmap"
     ]
 
     const pov = [
-        "Developer", "Creative", "Artist", "Data Analyst", "Engineer", "Other"
+        "--- Select ---",
+        "Programmer",
+        "Teacher",
+        "14year Old"
     ]
 
-    const exp_lvl = [
-        "Easy to Understand", "Deep", "Complex but Deep"
-    ]
 
     const [prompt, setPrompt] = useState('');
     const [output, setOutput] = useState('');
+
+    // for filter options -> prebuit or Custom
+    const [currentFilter, setCurrentFilter] = useState({ 0: 'Prebuilt Powerful Prompts' });
+    const cf = ['Prebuilt Powerful Prompts', 'Create Custom Prompt', 'Merge Prompts To Make Master Prompt']
+
     // render [input, output]
     const [chat, setChat] = useState([
         {
@@ -86,13 +88,14 @@ const PromptBox = (props) => {
     const [selected_file, setSelect_file] = useState(null);
 
     // filter values
-    const [pov_value, setPov_value] = useState('');
-    const [type_value, setType_value] = useState('');
-    const [LLM, setLLM] = useState('');
-    const [model_creativity, setModel_creativity] = useState('');
-    const [exp_lvl_value, setExp_lvl_value] = useState('');
-    const [domain, setDomain] = useState('');
-    const [projectComplexity, setProjectComplexity] = useState('')
+    const [filter, setFilter] = useState({
+        "user": null,
+        "input": null,
+        "languages": null,
+        "type": null,
+        "format": null,
+        "tags": null,
+    });
 
     // fetching data from flask api
     const fetchData = async (API_URL, data) => {
@@ -104,25 +107,25 @@ const PromptBox = (props) => {
                 const response = await axios.post(API_URL, data);
                 return response.data['output'];
             } catch (error) {
-                alert(error);
-                throw error;
+                // alert(error);
+                return undefined;
             }
         }
 
-        try {
-            const response = await axios.post(API_URL, data, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            });
-            // console.log(response);
-            return response.data['output'];
-        } catch (error) {
-            alert(error);
-            throw error;
+        else {
+            try {
+                const response = await axios.post(API_URL, data, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+                // console.log(response);
+                return response.data['output'];
+            } catch (error) {
+                return undefined;
+                // alert(error);
+            }
         }
-
-
     }
 
     const handlePromptBtn = async () => {
@@ -131,13 +134,13 @@ const PromptBox = (props) => {
         }
         // setOutput(prompt)
 
-
-        const o = await fetchData("http://localhost:8000/prompt", { "user2": prompt });
+        let res1 = await fetchData("http://localhost:8000/prompt", { "user2": JSON.stringify(filter) });
+        if (res1 === undefined) { res1 = JSON.stringify(filter) }
         // const o = prompt;
 
         const newItem = {
             input: `Q : ${prompt}`,
-            output: `${o}`,
+            output: `${res1}`,
             key: (Math.random() * 10) + 2
         };
 
@@ -146,19 +149,13 @@ const PromptBox = (props) => {
     }
 
     const handleRefineBtn = async () => {
-        if (prompt.trim().length == 0) {
+        if (prompt && prompt.trim().length == 0) {
             return;
         }
 
-        let filter = {
-            "input": prompt,
-            "pov": pov_value,
-            "type": type_value,
-            "understanding_lvl": exp_lvl_value,
-            "llm": LLM,
-            "creativity": model_creativity
-        }
-        setPrompt(await fetchData("http://localhost:8000", { "user1": JSON.stringify(filter) }));
+        let res2 = await fetchData("http://localhost:8000", { "user1": JSON.stringify(filter) });
+        const p = prompt;
+        (res2 === undefined) ? setPrompt(p) : setPrompt(res2);
     }
 
     const handleRandomBtn = () => {
@@ -179,7 +176,7 @@ const PromptBox = (props) => {
     const handleGrayBtn = (key) => {
         const idx = chat.findIndex(item => item.key === key);
         navigator.clipboard.writeText(chat[idx].output.split(":")[1].trim());
-        alert("Copied");
+        // alert("Copied");
     }
 
     const handleClearBtn = (key) => {
@@ -189,21 +186,9 @@ const PromptBox = (props) => {
 
 
         if (idx !== -1) {
-            if (chat[idx]['input'] == "deleted...") {
-                const newArray = [...chat]
-                newArray.splice(idx, 1)
-                setChat(newArray)
-            }
-            else {
-                const updatedChat = [...chat];
-                updatedChat[idx] = {
-                    input: "deleted...",
-                    output: "deleted...",
-                    key: key
-                };
-                setChat(updatedChat);
-            }
-
+            const newArray = [...chat]
+            newArray.splice(idx, 1)
+            setChat(newArray)
         }
     }
 
@@ -235,7 +220,7 @@ const PromptBox = (props) => {
     }
 
     return (
-        <main className='flex h-screen flex-col md:flex-row items-center'>
+        <main className='flex h-screen xl:flex-row flex-col items-center'>
 
             {/* upload section : position:absolute */}
             {
@@ -261,11 +246,11 @@ const PromptBox = (props) => {
             }
 
             {/* Left section */}
-            <div className='h-full w-full md:w-1/2 flex flex-col'>
+            <div className='h-full w-full xl:w-[70rem] flex flex-col'>
                 <Nav />
-                <div className='logo h-full w-full flex md:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
-                    <div className='w-full'><Logo data={{ width: "full" }} /></div>
-                    <div className='flex flex-col items-center md:items-center gap-3'>
+                <div className='logo h-full flex flex-row xl:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
+                    <div className='w-1/2'><Logo data={{ width: "w-fit" }} /></div>
+                    <div className='flex w-full xl:flex-col flex-row items-center justify-center gap-3'>
                         <img src={props.data['user']['image']} className='h-fit w-fit rounded-full border-2 border-white' />
                         <div className='flex items-center'>
                             <span className='bg-[#1b1b1bd8] p-3 rounded-lg'>Welcome, {props.data['user']['name']}</span>
@@ -277,6 +262,7 @@ const PromptBox = (props) => {
 
 
             <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
+                {prompt === "Loading..." ? <div className="w-full my-10 flex justify-center items-center absolute top-1/4"> <Spinner /> </div> : ""}
                 {/* Other sections */}
                 <div className="chatting h-full w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
 
@@ -297,9 +283,7 @@ const PromptBox = (props) => {
                                     </div>
 
                                     <div className="bg-[#1b1b1b] text-white p-4">
-                                        <code>
-                                            {item.output}
-                                        </code>
+                                        {item.output}
                                     </div>
 
                                     <div className="flex justify-evenly w-2/3">
@@ -320,7 +304,7 @@ const PromptBox = (props) => {
                 </div>
 
                 {/* Input promptbox */}
-                <div className="promptbox flex flex-col w-full max-w-[53rem] px-6 mt-4">
+                <div className="promptbox flex flex-col w-full px-6 mt-4">
 
                     <div className="w-full flex flex-row gap-1">
                         {/* <button onClick={handleRedBtn} className="bg-[#d03046] py-2 flex-grow">
@@ -331,36 +315,65 @@ const PromptBox = (props) => {
                         </button>
                     </div>
 
-                    <DynamicTextArea value={prompt} onChange={setPrompt} />
+                    <DynamicTextArea filter={filter} setFilter={setFilter} value={prompt} onChange={setPrompt} />
 
                     <div className="w-full flex flex-row gap-1">
                         <button onClick={handlePromptBtn} className="flex-grow p-2 bg-purple-700">Prompt</button>
                         <button onClick={handleRefineBtn} className="flex-grow p-2 bg-blue-700">Refine</button>
                         <button onClick={handleRandomBtn} className="flex-grow p-2 bg-[#150050] text-white">Random</button>
+                        <button onClick={handleRedBtn} className="flex-grow p-2 bg-red-500 text-white">Clear</button>
                     </div>
                 </div>
             </div>
 
 
-            <div className="h-full w-full md:w-fit bg-[#1b1b1b] flex flex-row justify-between">
+            <div className="h-full w-full bg-[#1b1b1b] flex flex-col justify-between">
+
+                <h1 className='w-full py-5 text-center text-md bg-gray-800'>
+                    ...
+                    <FontAwesomeIcon icon={faCoffee} className='px-3' />
+                    For Better Prompting
+                    ...
+                </h1>
+
                 <div className="filter h-full md:min-w-[40rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2">
                     {/* Filter section */}
-
                     <div className="h-full w-full flex flex-col gap-4 p-3">
-                        <Filter data={{ "q": "Select type of work??", "arr": pov, "func": setPov_value, "value": pov_value }} />
-                        <Filter data={{ "q": `Select your preferred domain`, "arr": [`Technology`, `Finance`, `Healthcare`, `Education`, `Entertainment`], "func": setDomain, "value": domain }} />
-                        <Filter data={{ "q": `Choose the project complexity`, "arr": [`Simple`, `Moderate`, `Complex`, `Advanced`], "func": setProjectComplexity, "value": projectComplexity }} />
-                        <Filter data={{ "q": "Type of output", "arr": type, "func": setType_value, "value": type_value }} />
-                        <Filter data={{ "q": "Understanding level", "arr": exp_lvl, "func": setExp_lvl_value, "value": exp_lvl_value }} />
-                        <Filter data={{ "q": "Choose LLM", "arr": ['mistral-7b', 'llama-2', 'openai', 'text2text', 'claude', 'gemini'], "func": setLLM, "value": LLM }} />
-                        <Filter data={{ "q": "Model creativity", "arr": ['Low', 'Medium', 'High', 'Critical'], "func": setModel_creativity, "value": model_creativity }} />
+
+                        <Filter data={{ "q": "Customization : ", "arr": cf, "func": setCurrentFilter, "object": 0, "filter": currentFilter }} />
+
+                        {
+                            // Custom Prompts
+                            (currentFilter[0] === "Create Custom Prompt") ? <>
+                                <Filter data={{ "q": "Select user type : ", "arr": pov, "func": setFilter, "object": "user", "filter": filter }} />
+                                <Filter data={{ "q": "Output type : ", "arr": type, "func": setFilter, "object": "type", "filter": filter }} />
+
+                                {/* format options */}
+                                <InputFilter text={"Specify format (optional) :"} placeholder={'eg. ```{input : [output]}``` '}
+                                value={filter} setValue={setFilter} object={'format'}
+                                />
+
+                                {/* tags */}
+                                <InputFilter text={"Extra tags (optional) :"} placeholder={"eg. frontend, react, api, nextjs"}
+                                value={filter} setValue={setFilter} object={'tags'}
+                                />
+
+                            </> : 
+                            // Prebuilt Prompts
+                            (currentFilter[0] == "Prebuilt Powerful Prompts") ? <>Inbuilt</> :
+
+                            // Merge Prompts
+                            (currentFilter[0] == "Merge Prompts To Make Master Prompt") ? <>Merge</> : null
+
+                        }
+
                     </div>
                 </div>
 
-                <div className='flex flex-col w-10 bg-gray-800'>
-                    <button className='h-full p-2'>
+                <div className='flex flex-row bg-gray-800 w-full justify-evenly'>
+                    <Link href="/settings" className='h-full p-2'>
                         <FontAwesomeIcon icon={faGear} className='bg-[#fb254100]' />
-                    </button>
+                    </Link>
 
                     <button className='h-full'>
                         <FontAwesomeIcon icon={faPlus} className='bg-[#fb254100]' />

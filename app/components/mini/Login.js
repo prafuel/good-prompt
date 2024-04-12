@@ -4,7 +4,6 @@ import React from 'react';
 import Logo from './Logo';
 import Image from 'next/image';
 
-import leftPointer from '../../../public/leftPointingChar.png'
 
 import { signIn } from "next-auth/react";
 

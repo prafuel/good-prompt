@@ -1,7 +1,7 @@
 // components/DynamicTextArea.js
 import React, { useRef, useEffect, useState } from 'react';
 
-const DynamicTextArea = ({ value, onChange }) => {
+const DynamicTextArea = ({ filter, setFilter, value, onChange }) => {
     const textareaRef = useRef(null);
 
     const [isOverflowing, setIsOverflowing] = useState(false);
@@ -19,7 +19,14 @@ const DynamicTextArea = ({ value, onChange }) => {
     }, [value]);
 
     const handleChange = (e) => {
-        if (onChange) onChange(e.target.value);
+        if (onChange) {
+          onChange(e.target.value);
+
+          // For filter section
+          const prev = {...filter};
+          prev['input'] = e.target.value;
+          setFilter(prev);
+        }
     };
 
 
@@ -28,7 +35,7 @@ const DynamicTextArea = ({ value, onChange }) => {
             ref={textareaRef}
             value={value}
             onChange={handleChange}
-            placeholder='eg. Suggest some good machine learning major project ideas'
+            placeholder='eg. machine learning major project ideas'
             style={
                 {
                     'resize': 'none',
