@@ -1,19 +1,21 @@
 import React from 'react'
 
-const InputFilter = ({text, placeholder, value, setValue, object}) => {
+const InputFilter = ({text, placeholder, value, setValue, object=null, nrows=3, disable=false}) => {
     return (
         <div className='flex flex-row  items-center justify-between h-fit'>
             {text}
             <textarea
                 placeholder={placeholder}
-                rows={3}
-                value={value[object]}
+                rows={nrows}
+                value={(object == null) ? value : value[object]}
                 onChange={(e) => {
+                    if (object == null) {setValue(e.target.value); return; }
                     const prev = { ...value };
                     prev[object] = e.target.value;
                     setValue(prev);
                 }}
-                className='p-2 w-1/2 outline-none bg-black border border-blue-300 resize-none'>
+                disabled={disable}
+                className={`p-2 w-1/2 outline-none bg-black border border-blue-300 resize-none`}>
             </textarea>
         </div>
     )

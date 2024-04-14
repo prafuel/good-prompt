@@ -56,14 +56,7 @@ const PromptBox = (props) => {
 
 
     const type = [
-        "--- Select ---", "Content", "List", "Code", "Explanation", "Key Point", "Roadmap"
-    ]
-
-    const pov = [
-        "--- Select ---",
-        "Programmer",
-        "Teacher",
-        "14year Old"
+        "--- Select ---", "Content", "List", "Code", "Explanation", "Key Point", "Roadmap", "Letter Writing"
     ]
 
 
@@ -73,6 +66,18 @@ const PromptBox = (props) => {
     // for filter options -> prebuit or Custom
     const [currentFilter, setCurrentFilter] = useState({ 0: 'Prebuilt Powerful Prompts' });
     const cf = ['Prebuilt Powerful Prompts', 'Create Custom Prompt', 'Merge Prompts To Make Master Prompt']
+
+    // merge prompt
+    const [merge, setMerge] = useState(
+        {
+            'count': 2,
+            'prompt1': '',
+            'prompt2': '',
+        }
+    )
+    // merge result
+    const [result, setResult] = useState('');
+
 
     // render [input, output]
     const [chat, setChat] = useState([
@@ -91,7 +96,6 @@ const PromptBox = (props) => {
     const [filter, setFilter] = useState({
         "user": null,
         "input": null,
-        "languages": null,
         "type": null,
         "format": null,
         "tags": null,
@@ -128,19 +132,38 @@ const PromptBox = (props) => {
         }
     }
 
+    const handleGenerateBtn = async () => {
+        if (prompt.trim().length == 0) {
+            return;
+        }
+        // setOutput(prompt)
+
+        let res = JSON.stringify(filter);
+        // const o = prompt;
+
+        const newItem = {
+            input: `Q : ${filter['input']}`,
+            output: `${res}`,
+            key: (Math.random() * 10) + 2
+        };
+
+        setChat(prevChat => [...prevChat, newItem]);
+        setPrompt('');
+    }
+
     const handlePromptBtn = async () => {
         if (prompt.trim().length == 0) {
             return;
         }
         // setOutput(prompt)
 
-        let res1 = await fetchData("http://localhost:8000/prompt", { "user2": JSON.stringify(filter) });
-        if (res1 === undefined) { res1 = JSON.stringify(filter) }
+        let res = await fetchData("http://localhost:8000/prompt", { "user2": JSON.stringify(filter) });
+        if (res === undefined) { res = "Server Side Error" }
         // const o = prompt;
 
         const newItem = {
-            input: `Q : ${prompt}`,
-            output: `${res1}`,
+            input: `Q : ${filter['input']}`,
+            output: `${res}`,
             key: (Math.random() * 10) + 2
         };
 
@@ -160,6 +183,11 @@ const PromptBox = (props) => {
 
     const handleRandomBtn = () => {
         let r = Math.floor(Math.random() * (random.length - 1));
+
+        const prev = { ...filter };
+        prev['input'] = random[r];
+        setFilter(prev);
+
         setPrompt(random[r]);
     }
 
@@ -170,13 +198,13 @@ const PromptBox = (props) => {
 
     const handleBlueBtn = (key) => {
         const idx = chat.findIndex(item => item.key === key);
-        setPrompt(chat[idx]['output'].split(":")[1].trim())
+        setPrompt(chat[idx].output);
     }
 
     const handleGrayBtn = (key) => {
-        const idx = chat.findIndex(item => item.key === key);
-        navigator.clipboard.writeText(chat[idx].output.split(":")[1].trim());
-        // alert("Copied");
+        // const idx = chat.findIndex(item => item.key === key);
+        // navigator.clipboard.writeText(chat[idx].output.split(":")[1].trim());
+        alert("Copied");
     }
 
     const handleClearBtn = (key) => {
@@ -217,6 +245,20 @@ const PromptBox = (props) => {
         }
 
         setSelect_file(null);
+    }
+
+    // merge submit
+    const handleSubmit = () => {
+        const str = JSON.stringify(merge);
+
+        if (!merge['prompt1'].trim().length || !merge['prompt2'].trim().length) {return};
+        const res = merge['prompt1'] + " " + merge['prompt2'];
+
+        setResult(res);
+
+        const prev = { ...filter };
+        prev['input'] = res;
+        setFilter(prev);
     }
 
     return (
@@ -264,7 +306,7 @@ const PromptBox = (props) => {
             <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
                 {prompt === "Loading..." ? <div className="w-full my-10 flex justify-center items-center absolute top-1/4"> <Spinner /> </div> : ""}
                 {/* Other sections */}
-                <div className="chatting h-full w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
+                <div className="chatting h-full sm:w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
 
                     {/* chatting section */}
                     <div className="flex flex-col gap-4 px-2">
@@ -293,7 +335,7 @@ const PromptBox = (props) => {
                                         <button onClick={() => handleGrayBtn(item.key)} className="bg-[#150050] p-3 w-full">
                                             <FontAwesomeIcon icon={faCopy} />
                                         </button>
-                                        <button onClick={() => handleClearBtn(item.key)} className="bg-[#d03046] p-3 w-full">
+                                        <button onClick={() => handleClearBtn(item.key)} className="bg-red-500 p-3 w-full">
                                             <FontAwesomeIcon icon={faXmark} />
                                         </button>
                                     </div>
@@ -319,6 +361,7 @@ const PromptBox = (props) => {
 
                     <div className="w-full flex flex-row gap-1">
                         <button onClick={handlePromptBtn} className="flex-grow p-2 bg-purple-700">Prompt</button>
+                        <button onClick={handleGenerateBtn} className="flex-grow p-2 bg-green-700">Generate</button>
                         <button onClick={handleRefineBtn} className="flex-grow p-2 bg-blue-700">Refine</button>
                         <button onClick={handleRandomBtn} className="flex-grow p-2 bg-[#150050] text-white">Random</button>
                         <button onClick={handleRedBtn} className="flex-grow p-2 bg-red-500 text-white">Clear</button>
@@ -345,26 +388,74 @@ const PromptBox = (props) => {
                         {
                             // Custom Prompts
                             (currentFilter[0] === "Create Custom Prompt") ? <>
-                                <Filter data={{ "q": "Select user type : ", "arr": pov, "func": setFilter, "object": "user", "filter": filter }} />
+                                {/* user type */}
+                                <InputFilter text={"Select user type : "} placeholder={"eg. Frontend Developer, Artist, Teacher"}
+                                    value={filter} setValue={setFilter} object={'user'} nrows={1}
+                                />
                                 <Filter data={{ "q": "Output type : ", "arr": type, "func": setFilter, "object": "type", "filter": filter }} />
 
                                 {/* format options */}
-                                <InputFilter text={"Specify format (optional) :"} placeholder={'eg. ```{input : [output]}``` '}
-                                value={filter} setValue={setFilter} object={'format'}
+                                <InputFilter text={"Specify format :"} placeholder={'eg. ```{input : [output]}``` '}
+                                    value={filter} setValue={setFilter} object={'format'} nrows={4}
                                 />
 
                                 {/* tags */}
-                                <InputFilter text={"Extra tags (optional) :"} placeholder={"eg. frontend, react, api, nextjs"}
-                                value={filter} setValue={setFilter} object={'tags'}
+                                <InputFilter text={"Extra tags :"} placeholder={"eg. frontend, react, api, nextjs"}
+                                    value={filter} setValue={setFilter} object={'tags'} nrows={4}
                                 />
 
-                            </> : 
-                            // Prebuilt Prompts
-                            (currentFilter[0] == "Prebuilt Powerful Prompts") ? <>Inbuilt</> :
+                            </> :
+                                // Prebuilt Prompts
+                                (currentFilter[0] == "Prebuilt Powerful Prompts") ? <>Inbuilt</> :
 
-                            // Merge Prompts
-                            (currentFilter[0] == "Merge Prompts To Make Master Prompt") ? <>Merge</> : null
+                                    // Merge Prompts
+                                    (currentFilter[0] == "Merge Prompts To Make Master Prompt") ? <>
+                                        <Filter data={{ "q": "Select Count : ", "arr": [2], "func": setMerge, "object": "count", "filter": merge }} />
+                                        {/* prompt1 */}
+                                        <InputFilter text={"Prompt1 :"} placeholder={"Paste Prompt1 here"}
+                                            value={merge} setValue={setMerge} object={'prompt1'} nrows={8}
+                                        />
+                                        {/* prompt2 */}
+                                        <InputFilter text={"Prompt2 :"} placeholder={"Paste Prompt2 here"}
+                                            value={merge} setValue={setMerge} object={'prompt2'} nrows={8}
+                                        />
 
+                                        {/* Merge Submit Button */}
+                                        <button onClick={handleSubmit} className='w-full p-4 bg-blue-500'>Submit</button>
+
+                                        {/* Resultant Prompt */}
+                                        <InputFilter text={"Result : "} placeholder={"Output will be shown here"}
+                                            value={result} setValue={setResult} nrows={8} disable={true}
+                                        />
+
+                                        {/* for better functionality */}
+                                        <div className='w-full flex-col bg-white justify-evenly'>
+                                            <button onClick={() => { setPrompt(result || null) }} className="bg-blue-700 p-3 w-1/3">
+                                                <FontAwesomeIcon icon={faRotateRight} />
+                                            </button>
+                                            {/* working on copy button */}
+                                            <button onClick={() => alert(result)} className="bg-[#150050] p-3 w-1/3">
+                                                <FontAwesomeIcon icon={faCopy} />
+                                            </button>
+
+                                            {/* Clear REsult*/}
+                                            <button onClick={() => {
+                                                // Clear result
+                                                setResult('');
+
+                                                // Clear Input prompts
+                                                const prev = {...merge};
+                                                prev['prompt1'] = '';
+                                                prev['prompt2'] = '';
+                                                setMerge(prev);
+
+                                            }} className="bg-red-500 p-3 w-1/3">
+                                                <FontAwesomeIcon icon={faXmark} />
+                                            </button>
+
+                                        </div>
+
+                                    </> : null
                         }
 
                     </div>
