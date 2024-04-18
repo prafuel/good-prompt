@@ -36,22 +36,28 @@ import InputFilter from '../mini/InputFilter'
 
 const PromptBox = (props) => {
 
+    const [prebuit, setPrebuilt] = useState([]);
+    const fetch = async () => {
+        try {
+            // Make a GET request to your URL
+            const response = await axios.get('http://127.0.0.1:8000/mongo/collection/prebuiltPrompts');
+
+            // Handle the response data
+            setPrebuilt(response.data['output']);
+            console.log(response.data);
+        } catch (error) {
+            // Handle any errors
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetch();
+    }, []);
+    // ===================================================================================
+
     const random = [
-        "Write a dialogue between two characters who discover a hidden portal in their backyard.",
-        "Describe a futuristic city where humans coexist with advanced artificial intelligence beings.",
-        "Create a short story about a chef who discovers a magical ingredient with unusual properties.",
-        "Imagine a world where everyone has a unique superpower, but the protagonist's power is considered useless until a critical moment.",
-        "Write a poem inspired by the colors of a sunset, exploring the emotions they evoke.",
-        "Develop a conversation between a time traveler from the past and a person from the present, discussing the changes in society.",
-        "Describe a day in the life of a sentient robot navigating through human society, trying to fit in.",
-        "Craft a suspenseful scene set in an abandoned amusement park at midnight.",
-        "Create a monologue for a character reflecting on their journey to self-discovery.",
-        "Write a letter from a fictional character to their future self, sharing hopes, fears, and aspirations.",
-        "Explore a world where dreams come to life, and characters must navigate through dreamscapes to achieve their goals.",
-        "Tell a story from the perspective of an inanimate object, giving it a voice and personality.",
-        "Write a scene where characters discover an ancient book with the power to change reality, and they must decide how to use it.",
-        "Imagine a society where emotions are bought and sold, and explore the consequences of a character losing their ability to feel.",
-        "Craft a story set in a post-apocalyptic world where nature has reclaimed urban landscapes, and survivors must adapt to a new way of life."
+
     ]
 
 
@@ -66,6 +72,7 @@ const PromptBox = (props) => {
     // for filter options -> prebuit or Custom
     const [currentFilter, setCurrentFilter] = useState({ 0: 'Prebuilt Powerful Prompts' });
     const cf = ['Prebuilt Powerful Prompts', 'Create Custom Prompt', 'Merge Prompts To Make Master Prompt']
+
 
     // merge prompt
     const [merge, setMerge] = useState(
@@ -251,7 +258,7 @@ const PromptBox = (props) => {
     const handleSubmit = () => {
         const str = JSON.stringify(merge);
 
-        if (!merge['prompt1'].trim().length || !merge['prompt2'].trim().length) {return};
+        if (!merge['prompt1'].trim().length || !merge['prompt2'].trim().length) { return };
         const res = merge['prompt1'] + " " + merge['prompt2'];
 
         setResult(res);
@@ -303,6 +310,7 @@ const PromptBox = (props) => {
             </div>
 
 
+            {/* Middle Section */}
             <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
                 {prompt === "Loading..." ? <div className="w-full my-10 flex justify-center items-center absolute top-1/4"> <Spinner /> </div> : ""}
                 {/* Other sections */}
@@ -369,7 +377,7 @@ const PromptBox = (props) => {
                 </div>
             </div>
 
-
+            {/* Right section */}
             <div className="h-full w-full bg-[#1b1b1b] flex flex-col justify-between">
 
                 <h1 className='w-full py-5 text-center text-md bg-gray-800'>
@@ -379,7 +387,7 @@ const PromptBox = (props) => {
                     ...
                 </h1>
 
-                <div className="filter h-full md:min-w-[40rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2">
+                <div className="filter h-full md:min-w-[40rem] sm:min-w-[40rem] flex flex-row-reverse md:px-2 overflow-y-scroll">
                     {/* Filter section */}
                     <div className="h-full w-full flex flex-col gap-4 p-3">
 
@@ -406,7 +414,36 @@ const PromptBox = (props) => {
 
                             </> :
                                 // Prebuilt Prompts
-                                (currentFilter[0] == "Prebuilt Powerful Prompts") ? <>Inbuilt</> :
+                                (currentFilter[0] == "Prebuilt Powerful Prompts") ?
+                                    <>
+                                        {
+                                            prebuit.map((item) => {
+                                                const user = item['user'];
+                                                const prompt = item['prompt'];
+                                                const index = item['index'];
+
+                                                return (
+                                                    <> <div className='flex flex-col'>
+                                                        <InputFilter text={`${index}. ${user}`} value={prompt}
+                                                            nrows={10} disable={true} />
+
+                                                        <div className='flex justify-end'>
+                                                            <button onClick={() => { setPrompt(result || null) }} className="bg-blue-700 p-3 w-1/4">
+                                                                <FontAwesomeIcon icon={faRotateRight} />
+                                                            </button>
+
+                                                            {/* working on copy button */}
+                                                            <button onClick={() => alert(result)} className="bg-[#150050] p-3 w-1/4">
+                                                                <FontAwesomeIcon icon={faCopy} />
+                                                            </button>
+                                                        </div>
+                                                    </div> </>
+                                                )
+
+                                                console.log(prompt);
+                                            })
+                                        }
+                                    </> :
 
                                     // Merge Prompts
                                     (currentFilter[0] == "Merge Prompts To Make Master Prompt") ? <>
@@ -444,7 +481,7 @@ const PromptBox = (props) => {
                                                 setResult('');
 
                                                 // Clear Input prompts
-                                                const prev = {...merge};
+                                                const prev = { ...merge };
                                                 prev['prompt1'] = '';
                                                 prev['prompt2'] = '';
                                                 setMerge(prev);
