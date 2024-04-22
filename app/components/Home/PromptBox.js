@@ -36,15 +36,19 @@ import InputFilter from '../mini/InputFilter'
 
 const PromptBox = (props) => {
 
-    const [prebuit, setPrebuilt] = useState([]);
-    const fetch = async () => {
+    // =======================================================================================
+    // fetching from mongodb -> prebuiltPrompts
+
+    const [random, setRandom] = useState([]);
+
+    const fetchRandom = async () => {
         try {
             // Make a GET request to your URL
-            const response = await axios.get('http://127.0.0.1:8000/mongo/collection/prebuiltPrompts');
+            const response = await axios.get('http://127.0.0.1:8000/mongo/collection/randomInput');
 
             // Handle the response data
-            setPrebuilt(response.data['output']);
-            console.log(response.data);
+            setRandom(response.data['output']);
+            console.log(response.data['output']);
         } catch (error) {
             // Handle any errors
             console.error('Error fetching data:', error);
@@ -52,13 +56,34 @@ const PromptBox = (props) => {
     };
 
     useEffect(() => {
-        fetch();
+        fetchRandom();
+    }, []);
+
+
+    // =======================================================================================
+
+
+    // =======================================================================================
+    // fetching from mongodb -> prebuiltPrompts
+    const [prebuit, setPrebuilt] = useState(null);
+    const fetchPrebuilt = async () => {
+        try {
+            // Make a GET request to your URL
+            const response = await axios.get('http://127.0.0.1:8000/mongo/collection/prebuiltPrompts');
+
+            // Handle the response data
+            setPrebuilt(response.data['output']);
+            // console.log(response.data);
+        } catch (error) {
+            // Handle any errors
+            console.error('Error fetching data:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPrebuilt();
     }, []);
     // ===================================================================================
-
-    const random = [
-
-    ]
 
 
     const type = [
@@ -190,12 +215,13 @@ const PromptBox = (props) => {
 
     const handleRandomBtn = () => {
         let r = Math.floor(Math.random() * (random.length - 1));
+        let p = random[r]['input'];
 
         const prev = { ...filter };
-        prev['input'] = random[r];
+        prev['input'] = p;
         setFilter(prev);
 
-        setPrompt(random[r]);
+        setPrompt(p);
     }
 
     const handleRedBtn = () => {
@@ -416,7 +442,7 @@ const PromptBox = (props) => {
                                 // Prebuilt Prompts
                                 (currentFilter[0] == "Prebuilt Powerful Prompts") ?
                                     <>
-                                        {
+                                        {   (prebuit == null) ? <div className='flex justify-center items-center h-full'> <Spinner /> </div>:
                                             prebuit.map((item) => {
                                                 const user = item['user'];
                                                 const prompt = item['prompt'];
