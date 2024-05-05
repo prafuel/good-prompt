@@ -235,8 +235,8 @@ const PromptBox = (props) => {
     }
 
     const handleGrayBtn = (key) => {
-        // const idx = chat.findIndex(item => item.key === key);
-        // navigator.clipboard.writeText(chat[idx].output.split(":")[1].trim());
+        const idx = chat.findIndex(item => item.key === key);
+        navigator.clipboard.writeText(chat[idx]['output']);
         alert("Copied");
     }
 
@@ -294,6 +294,8 @@ const PromptBox = (props) => {
         setFilter(prev);
     }
 
+    console.log(chat);
+
     return (
         <main className='flex h-screen xl:flex-row flex-col items-center'>
 
@@ -324,7 +326,7 @@ const PromptBox = (props) => {
             <div className='h-full w-full xl:w-[70rem] flex flex-col'>
                 <Nav />
                 <div className='logo h-full flex flex-row xl:flex-col items-center justify-around md:justify-around bg-[#1b1b1b]'>
-                    <div className='w-1/2'><Logo data={{ width: "w-fit" }} /></div>
+                    <div className='w-90'><Logo data={{ width: "w-fit" }} /></div>
                     <div className='flex w-full xl:flex-col flex-row items-center justify-center gap-3'>
                         <img src={props.data['user']['image']} className='h-fit w-fit rounded-full border-2 border-white' />
                         <div className='flex items-center'>
@@ -340,25 +342,27 @@ const PromptBox = (props) => {
             <div className="h-full md:w-full flex flex-col items-center justify-around pb-6 md:px-2">
                 {prompt === "Loading..." ? <div className="w-full my-10 flex justify-center items-center absolute top-1/4"> <Spinner /> </div> : ""}
                 {/* Other sections */}
-                <div className="chatting h-full sm:w-full flex flex-col p-5" style={{ maxHeight: "750px", overflowY: "auto" }}>
+                <div className="chatting h-full sm:w-full flex flex-col p-5 overflow-y-scroll" style={{ maxHeight: "750px"}}>
 
                     {/* chatting section */}
-                    <div className="flex flex-col gap-4 px-2">
+                    <div className="flex flex-col gap-4 px-2 items-center">
 
                         {Array.isArray(chat) && chat.map((item, index) => (
                             <>
 
-                                <div className="flex flex-col" key={index}>
+                                <div className="flex flex-col max-w-2xl" key={index}>
                                     <div>
                                         {/* User avatar */}
                                         <div className="w-full flex items-center justify-end">
                                             <img className="h-10 w-10" src={props.data.user.image} alt="user" />
                                         </div>
 
-                                        <div className="bg-[#dad7d7] text-black rounded-tl-3xl p-3">{item.input}</div>
+                                        <div className="bg-[#dad7d7] text-black rounded-tl-3xl p-3 overflow-x-scroll">
+                                            {item.input}
+                                        </div>
                                     </div>
 
-                                    <div className="bg-[#1b1b1b] text-white p-4">
+                                    <div className="bg-[#1b1b1b] text-white p-4 overflow-x-scroll">
                                         {item.output}
                                     </div>
 
@@ -454,12 +458,12 @@ const PromptBox = (props) => {
                                                             nrows={10} disable={true} />
 
                                                         <div className='flex justify-end'>
-                                                            <button onClick={() => { setPrompt(result || null) }} className="bg-blue-700 p-3 w-1/4">
+                                                            <button onClick={() => { setPrompt(prompt || null) }} className="bg-blue-700 p-3 w-1/4">
                                                                 <FontAwesomeIcon icon={faRotateRight} />
                                                             </button>
 
                                                             {/* working on copy button */}
-                                                            <button onClick={() => alert(result)} className="bg-[#150050] p-3 w-1/4">
+                                                            <button onClick={() => alert(prompt)} className="bg-[#150050] p-3 w-1/4">
                                                                 <FontAwesomeIcon icon={faCopy} />
                                                             </button>
                                                         </div>
@@ -475,11 +479,11 @@ const PromptBox = (props) => {
                                     (currentFilter[0] == "Merge Prompts To Make Master Prompt") ? <>
                                         <Filter data={{ "q": "Select Count : ", "arr": [2], "func": setMerge, "object": "count", "filter": merge }} />
                                         {/* prompt1 */}
-                                        <InputFilter text={"Prompt1 :"} placeholder={"Paste Prompt1 here"}
+                                        <InputFilter text={"From :"} placeholder={"Paste Prompt1 here"}
                                             value={merge} setValue={setMerge} object={'prompt1'} nrows={8}
                                         />
                                         {/* prompt2 */}
-                                        <InputFilter text={"Prompt2 :"} placeholder={"Paste Prompt2 here"}
+                                        <InputFilter text={"Into :"} placeholder={"Paste Prompt2 here"}
                                             value={merge} setValue={setMerge} object={'prompt2'} nrows={8}
                                         />
 
