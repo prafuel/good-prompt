@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Good Prompt Server</title>
+</head>
+
+<body>
+
+    <form method="post">
+        <input type="text" placeholder="input will be here..." name="user1" />
+        <button type="submit">Submit</button>
+    </form>
+
+    <form action="/file" method="post" enctype="multipart/form-data">
+        <input type="file" name="file">
+        <button type="submit">Submit</button>
+    </form>    
+
+    <form action="/prompt" method="post">
+        <input type="text" placeholder="input prompt will be here..." name="user2" />
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+</html>

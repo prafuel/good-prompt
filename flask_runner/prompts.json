@@ -1,0 +1,7 @@
+{
+    "prompts": {
+        "refine": "just correct grammer and words if necessary for following sentense, '{message}'",
+        "generate": "based on the following json file, your task is to generate proper prompt that will understand users problem from input key and using other options and also take care of following format that is inside the 3 stars eg. ***<generated prompt>***, json_file = {user_input}",
+        "transfer": "you can observe the style, format, and way of writing 'from_prompt'. The task is to transfer its characteristics to the prompt with 'too_prompt' without altering its main purpose, only generating a prompt dont generate anything else"
+    }
+}

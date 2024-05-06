@@ -281,13 +281,17 @@ const PromptBox = (props) => {
     }
 
     // merge submit
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         const str = JSON.stringify(merge);
 
         if (!merge['prompt1'].trim().length || !merge['prompt2'].trim().length) { return };
-        const res = merge['prompt1'] + " " + merge['prompt2'];
+        // res = merge['prompt1'] + merge['prompt2'];
+        const res = await fetchData("http://localhost:8000/transfer", {"user1" : JSON.stringify({"from_prompt" : merge['prompt1'], "too_prompt" : merge['prompt2']})});
 
+        console.log(res);
         setResult(res);
+
+        setPrompt('');
 
         const prev = { ...filter };
         prev['input'] = res;
