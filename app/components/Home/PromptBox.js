@@ -269,9 +269,22 @@ const PromptBox = (props) => {
             const form_data = new FormData();
             form_data.append("file", selected_file)
 
+            setPrompt('Loading...');
             // console.log(form_data)
             const res = await fetchData("http://localhost:8000/file", form_data);
-            alert(res);
+            // setPrompt(res);
+
+            const newItem = {
+                input: `Q : File Uploaded Succesfully`,
+                output: `${res}`,
+                key: (Math.random() * 10) + 2
+            };
+    
+            setChat(prevChat => [...prevChat, newItem]);
+
+            setPrompt('');
+
+            // alert(res);
         } catch (error) {
             console.error("Error uploading file:", error);
             alert("An error occurred while uploading the file.");

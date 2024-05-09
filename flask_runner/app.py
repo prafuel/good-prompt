@@ -2,7 +2,7 @@ from flask_cors import CORS
 from flask import Flask, request, render_template
 from langchain.prompts import PromptTemplate
 import json
-# import PyPDF2
+from PyPDF2 import PdfReader
 
 # nltk
 from nltk.tokenize import word_tokenize
@@ -28,6 +28,15 @@ def output_format(output):
     return {
         "output": output
     }
+
+
+# convert pdf-to-text
+def convert_pdf_to_text(path: str):
+    pdf_file = PdfReader(path)
+    text = ""
+    for page in pdf_file.pages:
+        text += page.extract_text()
+    return text
 
 def preprocessing(text : str) -> str:
     # lowercase
@@ -58,9 +67,15 @@ def get_file():
     print(request.files)
     file = request.files['file']
     if file.filename.split(".")[1] in extentions:
-        name = "".join(file.filename.split(" ")).lower()
+        # name = "".join(file.filename.split(" ")).lower()
+        name = "temp.pdf"
         file.save(name)
-        return output_format("File is Accepted, " + name)
+        text = convert_pdf_to_text("./temp.pdf")
+        prompt = llm.get_file_prompt(text)
+        
+        response = llm.model.generate_content(prompt)
+        return output_format(f"context : {text}, {response.text}")
+        # return output_format("File is Accepted, " + name)
     return output_format("plz upload pdf or csv only")
 
 
@@ -71,7 +86,9 @@ def get_result():
     user_input = json.loads(user_input)
     user_input['input'] = preprocessing(user_input['input'])
 
-    response = llm.model.generate_content(json.dumps(user_input))
+    prompt = llm.generate_prompt(user_input)
+
+    response = llm.model.generate_content(prompt)
     return output_format(response.text)
 
 @app.route("/transfer", methods=['post'])

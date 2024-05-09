@@ -25,6 +25,10 @@ class LLM:
         template = prompts['prompts']['generate']
         prompt = PromptTemplate(template=template, input_variables=['user_input'])
         return prompt.format(user_input=user_input)
+    
+    def get_file_prompt(self, pdf_text: str):
+        template = prompts['prompts']['document']
+        return f"pdf_context={pdf_text}, {template}"
 
     def transfer_prompt(self, from_prompt: str, too_prompt: str):
         template = prompts['prompts']['transfer']
